@@ -1,0 +1,16 @@
+{
+    "name": "Lexi — Kelime Çalışma Alanı",
+    "short_name": "Lexi",
+    "description": "İngilizce kelimeleri üreterek öğren.",
+    "lang": "tr",
+    "start_url": "./index.html",
+    "scope": "./",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#0d0f13",
+    "theme_color": "#0d0f13",
+    "icons": [
+        { "src": "ikon/lexi-192.png", "sizes": "192x192", "type": "image/png" },
+        { "src": "ikon/lexi-512.png", "sizes": "512x512", "type": "image/png" }
+    ]
+}

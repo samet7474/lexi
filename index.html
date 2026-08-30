@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>Lexi | Kelime Çalışma Alanı</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0d0f13">
+    <link rel="apple-touch-icon" href="ikon/lexi-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Lexi">
+</head>
+<body data-theme="odak">
+<div class="shell">
+
+    <!-- Üst şerit: kimlik, gezinme, günün durumu. Sayfanın tek sabit parçası. -->
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">L</span> <span>Lexi</span><span class="active-user" id="activeUser" title="Açık kullanıcı"></span></div>
+
+        <nav class="tabs">
+            <button class="tab" data-tab="study">Çalış</button>
+            <button class="tab active" data-tab="library">Kütüphane</button>
+            <button class="tab" data-tab="test">Test</button>
+            <button class="tab" data-tab="challenge">Challenge</button>
+            <button class="tab" data-tab="dictionary">Sözlük</button>
+            <button class="tab" data-tab="stats">İstatistikler</button>
+        </nav>
+
+        <div class="status">
+            <div class="stat-pill" title="Üst üste üretim yaptığın gün"><i>🔥</i><strong id="streakStat">0</strong></div>
+            <div class="stat-pill xp" title="Bugün kazanılan puan"><i>✦</i><strong id="xpStat">+0</strong></div>
+            <div class="stat-pill goal" title="Günün hedefi"><span class="goal-fill" id="goalBar"></span><i>◎</i><strong id="goalText">0 / 10</strong></div>
+            <div class="stat-pill due" title="Vadesi gelen kart"><i>◷</i><strong id="dueStat">0</strong></div>
+            <span class="sync-chip hidden" id="syncStatus"></span>
+        </div>
+
+        <div class="header-actions">
+            <details class="menu">
+                <summary title="Ayarlar">⋯</summary>
+                <div class="menu-body">
+                    <label>Tema
+                        <div class="theme-picker" id="themePicker">
+                            <button type="button" class="theme-option" data-theme="sakin" title="Sıcak kağıt, dingin, serif">Sakin</button>
+                            <button type="button" class="theme-option" data-theme="odak" title="Karanlık, tek vurgu, odaklanmalık">Odak</button>
+                            <button type="button" class="theme-option" data-theme="canli" title="Parlak, doygun, yuvarlak">Canlı</button>
+                        </div>
+                    </label>
+                    <label>Günlük hedef
+                        <select id="goalSelect">
+                            <option value="5">5 üretim</option>
+                            <option value="10">10 üretim</option>
+                            <option value="20">20 üretim</option>
+                            <option value="30">30 üretim</option>
+                        </select>
+                    </label>
+                    <button class="small-button" id="switchUser">Kullanıcı değiştir</button>
+                    <button class="small-button" id="exportBackup">Yedeği indir</button>
+                    <button class="small-button" id="importBackup">Yedeği içe aktar</button>
+                    <input id="backupFile" type="file" accept="application/json,.json" hidden>
+                </div>
+            </details>
+        </div>
+    </header>
+
+
+    <main class="main">
+
+        <!-- ============================================ Kütüphane -->
+        <section id="libraryView">
+            <div class="library-layout">
+                <aside class="panel sidebar">
+                    <div class="side-title">Klasörler <button class="icon-button" id="addFolder" title="Yeni klasör">+</button></div>
+                    <div id="folderList"></div>
+                </aside>
+                <div class="library-main">
+                    <div class="toolbar">
+                        <div>
+                            <h2 id="folderTitle">Tüm kelimeler</h2>
+                            <span class="subtle" id="wordCount">0 kelime</span>
+                        </div>
+                        <button class="action" id="newWord">+ Kelime ekle</button>
+                    </div>
+
+                    <div class="filters">
+                        <input id="searchWords" type="search" placeholder="Kelime, tanım veya cümle ara...">
+                        <select id="levelFilter">
+                            <option value="all">Tüm seviyeler</option>
+                            <option value="hard">Zorlandıklarım</option>
+                            <option value="none">Seviyesiz</option>
+                            <option value="nodef">Tanımı olmayanlar</option>
+                            <option value="nocloze">Cümlesi uygun olmayanlar</option>
+                            <option value="nosource">Kaynağı yazılmamışlar</option>
+                            <option value="filler">Cümlesi otomatik olanlar</option>
+                        </select>
+                    </div>
+
+                    <form class="form hidden" id="wordForm">
+                        <div class="form-grid">
+                            <label>İngilizce kelime<input id="engWord" required placeholder="Örn. resilient"></label>
+                            <label>Türkçe anlamı <span class="label-note">ipucunun arkasında durur</span><input id="turkMeaning" required placeholder="Örn. dayanıklı"></label>
+                        </div>
+                        <label>İngilizce tanım <span class="label-note">anlamın birincil hâli — basit tut</span>
+                            <input id="wordDefinition" placeholder="Örn. able to recover quickly after something difficult"></label>
+                        <label>Örnek cümle <span class="label-note" id="sentenceNote">kelimeyi gördüğün gerçek cümle en iyisi</span>
+                            <textarea id="engSentence" placeholder="Kelimeyi doğal bir cümlede kullan..."></textarea></label>
+                        <div class="form-grid">
+                            <label>Kalıp kullanım / collocation<input id="wordCollocation" placeholder="Örn. make a decision"></label>
+                            <label>Nerede gördün?<input id="wordSource" placeholder="Örn. kitap s.42 · oyun · video"></label>
+                        </div>
+                        <div class="form-grid">
+                            <label>Seviye<select id="wordLevel">
+                                <option value="">Seviye seçilmedi</option>
+                                <option value="A1">A1</option><option value="A2">A2</option>
+                                <option value="B1">B1</option><option value="B2">B2</option>
+                                <option value="C1">C1</option><option value="C2">C2</option>
+                            </select></label>
+                            <label>Hatırlama notu (mnemonic)<input id="wordMnemonic" placeholder="Kendi hafıza ipucun..."></label>
+                        </div>
+                        <div class="dialog-actions" style="justify-content:flex-start">
+                            <button class="action" type="submit" id="saveWord">Kelimeyi kaydet</button>
+                            <button type="button" class="small-button" id="cancelEdit">Vazgeç</button>
+                        </div>
+                    </form>
+
+                    <div class="word-list" id="wordList"></div>
+                    <div class="pagination" id="wordPagination"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ Çalış -->
+        <section id="studyView" class="hidden">
+            <div class="study-panel">
+                <div class="study-bar">
+                    <div class="study-meta-line">
+                        <span id="studyMeta">Klasör seç</span>
+                        <span class="queue-badge" id="studyQueueBadge">0 vadesi geldi</span>
+                    </div>
+                    <div class="study-controls">
+                        <select id="studyMode" aria-label="Çalışma modu">
+                            <option value="flow">Günlük akış</option>
+                            <option value="cloze">Boşluk doldurma</option>
+                            <option value="produce">Anlamdan kelimeye</option>
+                            <option value="listen">Dinle ve yaz</option>
+                            <option value="intro">Kart (tanışma)</option>
+                        </select>
+                        <select id="studyQueue" aria-label="Çalışma kuyruğu">
+                            <option value="due">Vadesi gelenler</option>
+                            <option value="new">Hiç çalışılmamışlar</option>
+                            <option value="hard">Zorlandıklarım</option>
+                            <option value="all">Tüm kartlar</option>
+                        </select>
+                        <select id="studyFolder" aria-label="Klasör"></select>
+                    </div>
+                </div>
+
+                <div class="progress"><span id="progressBar"></span></div>
+
+                <div class="stage">
+                    <div class="stage-kicker" id="studyKicker">Hazır mısın?</div>
+                    <div class="stage-prompt" id="studyPrompt"></div>
+                    <button class="speak-button hidden" id="studySpeak" title="İngilizceyi dinle" aria-label="İngilizceyi dinle">🔊</button>
+                    <div class="stage-cues" id="studyCues"></div>
+                    <input id="studyAnswer" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Cevabını yaz...">
+                    <div class="stage-feedback" id="studyFeedback"></div>
+                    <div class="stage-detail hidden" id="studyDetail"></div>
+                </div>
+
+                <div class="study-rating hidden" id="studyRating">
+                    <button data-rating="again">Tekrar</button>
+                    <button data-rating="hard">Zor</button>
+                    <button data-rating="easy">Kolay</button>
+                </div>
+
+                <div class="study-actions">
+                    <button class="secondary" id="prevCard">← Önceki</button>
+                    <div class="study-side" id="studyProduceActions">
+                        <button class="secondary" id="studyHint">İpucu</button>
+                        <button class="secondary" id="studySkip">Bilmiyorum</button>
+                    </div>
+                    <button id="studyPrimary">Cevapla</button>
+                </div>
+
+                <div class="kbd-hint">
+                    <kbd>Enter</kbd><span>cevapla / ilerle</span>
+                    <kbd>H</kbd><span>ipucu</span>
+                    <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><span>tanışma kartı</span>
+                    <kbd>S</kbd><span>seslendir</span>
+                </div>
+            </div>
+
+            <section class="task-panel" id="taskList"></section>
+        </section>
+
+        <!-- ============================================ Test -->
+        <section id="testView" class="hidden">
+            <div class="practice-panel">
+                <div class="practice-head">
+                    <div><h2>Hızlı test</h2><span class="subtle" id="testMeta">10 soruluk tanıma kontrolü · puan vermez</span></div>
+                    <select id="testFolder"></select>
+                </div>
+                <div id="testSetup"><button class="action" id="startTest">Teste başla</button></div>
+                <div id="testGame" class="hidden">
+                    <div class="subtle">Soru <span id="testProgress">1 / 10</span> · Skor <strong id="testScore">0</strong></div>
+                    <div class="practice-question">
+                        <span>Bu kelimenin anlamı nedir?</span>
+                        <div class="test-word-with-speech">
+                            <strong id="testWord"></strong>
+                            <button class="speak-button" id="testSpeak" title="İngilizceyi dinle" aria-label="İngilizceyi dinle">🔊</button>
+                        </div>
+                    </div>
+                    <div class="practice-options" id="testOptions"></div>
+                    <div class="practice-feedback" id="testFeedback"></div>
+                    <button class="action hidden" id="nextTest">Sonraki soru</button>
+                </div>
+                <div id="testResult" class="hidden practice-result">
+                    <h3>Test bitti</h3>
+                    <p id="testResultText"></p>
+                    <div class="test-analysis" id="testResultAnalysis"></div>
+                    <button class="action" id="restartTest">Yeni test</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ Challenge -->
+        <section id="challengeView" class="hidden">
+            <div class="challenge-panel">
+                <div class="challenge-top">
+                    <div><h2>Günün challenge'ı</h2><span class="subtle">Oyun katmanı — rekorları ayrı tutulur.</span></div>
+                    <div>
+                        <select class="challenge-mode" id="challengeMode">
+                            <option value="flash">Hızlı hatırlama</option>
+                            <option value="quiz">Anlamını seç</option>
+                            <option value="english">İngilizcesini seç</option>
+                            <option value="infinite">Sonsuz mod</option>
+                            <option value="matching">Eşleştirme</option>
+                            <option value="falling">Düşen kelimeler</option>
+                        </select>
+                        <select class="challenge-mode" id="challengeFolder" aria-label="Challenge klasörü"></select>
+                        <span class="challenge-badge" id="challengeMeta">0 / 5</span>
+                        <span class="challenge-high-score" id="challengeHighScore">Rekor: 0</span>
+                    </div>
+                </div>
+                <div class="challenge-hud">
+                    <div class="challenge-stat">Puan<strong id="challengeScore">0</strong></div>
+                    <div class="challenge-stat">Seri<strong id="challengeCombo">x0</strong></div>
+                    <div class="challenge-stat lives">Can<strong id="challengeLives">♥♥♥</strong></div>
+                    <div class="challenge-stat">Süre<strong id="challengeTime">20</strong></div>
+                </div>
+                <div class="challenge-timer" id="challengeTimer"><span id="challengeTimerBar"></span></div>
+                <div id="challengePlay">
+                    <div class="challenge-card" id="challengeCard">
+                        <div>
+                            <div class="challenge-word" id="challengeWord">Hazır mısın?</div>
+                            <div class="challenge-answer hidden" id="challengeAnswer"></div>
+                            <div class="challenge-options hidden" id="challengeOptions"></div>
+                            <div class="hint-line" id="challengeHint">Önce anlamını tahmin et, sonra cevabı aç</div>
+                        </div>
+                    </div>
+                    <div class="challenge-actions">
+                        <button class="secondary" id="challengeReveal">Cevabı göster</button>
+                        <button id="challengeNext">Biliyorum →</button>
+                    </div>
+                </div>
+                <div class="challenge-result hidden" id="challengeResult">
+                    <h3 id="challengeResultTitle">Tur tamamlandı!</h3>
+                    <p id="challengeResultText"></p>
+                    <strong id="challengeResultScore">0 XP</strong>
+                    <div class="challenge-actions"><button id="challengeRestart">Yeni tur</button></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ Sözlük -->
+        <section id="dictionaryView" class="hidden">
+            <div class="practice-panel">
+                <div class="practice-head">
+                    <div><h2>Sözlük</h2><span class="subtle" id="dictionaryMeta">Tüm kelimeler</span></div>
+                    <div class="filters" style="margin:0">
+                        <input id="dictionarySearch" type="search" placeholder="Sözlükte ara...">
+                        <select id="dictionaryLevel">
+                            <option value="all">Tüm seviyeler</option>
+                            <option value="hard">Zorlandıklarım</option>
+                            <option value="none">Seviyesiz</option>
+                            <option value="nodef">Tanımı olmayanlar</option>
+                            <option value="nocloze">Cümlesi uygun olmayanlar</option>
+                            <option value="nosource">Kaynağı yazılmamışlar</option>
+                            <option value="filler">Cümlesi otomatik olanlar</option>
+                        </select>
+                        <button class="small-button" id="printDictionary">Yazdır / PDF</button>
+                    </div>
+                </div>
+                <div class="word-list" id="dictionaryList"></div>
+                <div class="pagination" id="dictionaryPagination"></div>
+            </div>
+        </section>
+
+        <!-- ============================================ İstatistikler -->
+        <section id="statsView" class="hidden">
+            <div class="toolbar">
+                <div><h2>Çalışma raporu</h2><span class="subtle">İlerlemeni kelime kelime gör.</span></div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stats-card"><small>Toplam XP</small><strong id="xpTotalStat">0</strong></div>
+                <div class="stats-card"><small>Bugünkü XP</small><strong id="xpTodayStat">0</strong></div>
+                <div class="stats-card"><small>Toplam üretim</small><strong id="prodTotalStat">0</strong></div>
+                <div class="stats-card"><small>Üretim doğruluğu</small><strong id="prodAccuracyStat">—</strong></div>
+                <div class="stats-card"><small>Ortalama stabilite</small><strong id="averageStabilityStat">1 gün</strong></div>
+            </div>
+
+            <div class="stats-panel">
+                <h3>Değerlendirme dağılımı</h3>
+                <div class="bar-line"><span>Kolay</span><i id="easyBar"></i><em id="easyCount">0</em></div>
+                <div class="bar-line"><span>Zor</span><i id="hardBar"></i><em id="hardCount">0</em></div>
+                <div class="bar-line"><span>Tekrar</span><i id="againBar"></i><em id="againCount">0</em></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Günlük üretim geçmişi</h3>
+                <div class="daily-history" id="dailyHistory"></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Son 90 gün · üretim</h3>
+                <div class="heatmap" id="heatmap"></div>
+                <div class="heat-legend">
+                    <span>az</span><i class="heat-cell"></i><i class="heat-cell" data-level="1"></i><i class="heat-cell" data-level="2"></i><i class="heat-cell" data-level="3"></i><i class="heat-cell" data-level="4"></i><span>çok</span>
+                </div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>En çok zorlandıkların</h3>
+                <div class="test-analysis" id="strugglingList"></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Test analizleri</h3>
+                <div class="test-analysis" id="testHistoryList"></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Challenge rekorları</h3>
+                <div class="record-grid" id="recordGrid"></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Kelime etkileşimleri</h3>
+                <table class="stats-table">
+                    <thead><tr><th>Kelime</th><th>Klasör</th><th>Etkileşim</th></tr></thead>
+                    <tbody id="statsTable"></tbody>
+                </table>
+                <div class="pagination" id="statsPagination"></div>
+            </div>
+
+            <div class="stats-panel" style="margin-top:12px">
+                <h3>Veri ve yedekler</h3>
+                <p class="subtle">Verilerin bu tarayıcıda saklanıyor. Düzenli olarak dışa aktar.</p>
+                <div class="dialog-actions" style="justify-content:flex-start; flex-wrap:wrap; margin-top:10px">
+                    <button class="small-button" id="exportJson">JSON yedeği</button>
+                    <button class="small-button" id="exportCsv">CSV olarak indir</button>
+                    <button class="small-button" id="exportAnki">Anki için indir</button>
+                </div>
+                <h3 style="margin-top:18px">Otomatik yedekler</h3>
+                <p class="subtle">Uygulama değişikliklerinde otomatik anlık görüntü alır. Bir şey ters giderse geri dönebilirsin.</p>
+                <div class="backup-list" id="backupList"></div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<dialog id="folderDialog">
+    <form method="dialog" class="dialog-body" id="folderForm">
+        <h3 id="folderDialogTitle">Yeni klasör</h3>
+        <label>Klasör adı<input id="folderName" required placeholder="Örn. Seyahat İngilizcesi"></label>
+        <div class="dialog-actions">
+            <button type="button" class="small-button" id="cancelFolder">Vazgeç</button>
+            <button class="action" id="saveFolder">Klasörü kaydet</button>
+        </div>
+    </form>
+</dialog>
+
+<div class="gate" id="userGate">
+    <form class="gate-body" id="gateForm">
+        <div class="gate-brand"><span class="brand-mark">L</span> Lexi</div>
+        <h2>Kim çalışıyor?</h2>
+
+        <div id="gateUsersWrap" class="hidden">
+            <p class="gate-hint">Bu cihazdaki kullanıcılar</p>
+            <div class="gate-users" id="gateUsers"></div>
+            <p class="gate-hint">ya da yeni bir ad yaz</p>
+        </div>
+
+        <div id="gateLegacy" class="gate-legacy hidden"><span id="gateLegacyText"></span></div>
+
+        <label>Kullanıcı adı<input id="gateName" autocomplete="off" placeholder="Örn. Karpuz" required></label>
+        <label>PIN <span class="label-note">dört rakam — kazara silmeye karşı</span>
+            <input id="gatePin" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="••••" required></label>
+
+        <div class="gate-error" id="gateError"></div>
+        <button class="action" type="submit">Başla</button>
+        <p class="gate-hint">Kelimeler herkese açık; PIN yalnızca senin verini <strong>değiştirmeyi</strong> kilitler.</p>
+    </form>
+</div>
+
+<div class="toast-host" id="toastHost"></div>
+<script src="app.js"></script>
+</body>
+</html>
