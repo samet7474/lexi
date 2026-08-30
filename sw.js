@@ -13,7 +13,7 @@
    Sürüm: uygulamayı değiştirdiğimde CACHE adını artır; eski önbellek silinir.
    ========================================================================= */
 
-const CACHE = 'lexi-v2';
+const CACHE = 'lexi-v3';
 
 const SHELL = [
     './',

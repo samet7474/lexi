@@ -1721,7 +1721,15 @@ function studyPrimary() {
     if (studyFinished) { buildStudy(); return; }
     const entry = studyCards[studyIndex];
     if (!entry) return;
-    if (entry.type === 'intro') { revealCard(); return; }
+    if (entry.type === 'intro') {
+        // Tanışma kartı üç hâlde olabilir ve düğme her birinde başka iş yapar.
+        // Eskiden koşulsuz `revealCard()` çağrılıyordu: geri dönülen, zaten
+        // değerlendirilmiş bir kartta düğme hiçbir şey yapmıyor, tur kilitleniyordu.
+        if (entry.done) advanceStudy();          // değerlendirilmiş → ilerle
+        else if (!revealed) revealCard();        // henüz çevrilmemiş → çevir
+        // çevrilmiş ama değerlendirilmemiş → kullanıcı 1/2/3 seçmeli, düğme zaten gizli
+        return;
+    }
     if (studyAnswered) advanceStudy(); else answerStudy(false);
 }
 
