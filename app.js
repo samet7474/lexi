@@ -1478,6 +1478,7 @@ function showStudyCard(note = '') {
         $('studyFeedback').className = 'stage-feedback';
         $('studyDetail').classList.add('hidden');
         $('studySpeak').classList.add('hidden');
+        $('prevCard').classList.add('hidden');
         showGroups(false, false);
         $('studyPrimary').classList.remove('hidden');
         $('studyPrimary').textContent = 'Yeni tur';
@@ -1494,12 +1495,15 @@ function showStudyCard(note = '') {
         $('studyFeedback').className = 'stage-feedback';
         $('studyDetail').classList.add('hidden');
         $('studySpeak').classList.add('hidden');
+        $('prevCard').classList.add('hidden');
         showGroups(false, false);
         $('studyPrimary').classList.add('hidden');
         return;
     }
 
     const production = entry.type !== 'intro';
+    // İlk kartta "Önceki" diye bir şey yok; eskiden basınca turun sonuna sarıyordu.
+    $('prevCard').classList.toggle('hidden', studyIndex === 0);
     $('studyKicker').textContent = EXERCISE_LABELS[entry.type];
     $('studyMeta').textContent = `${studyIndex + 1} / ${studyCards.length} kart`
         + (sessionProduced ? ` · bu tur ${sessionCorrect}/${sessionProduced} · +${sessionXP} XP` : ` · ${QUEUE_LABELS[$('studyQueue').value]}`);
@@ -1517,14 +1521,25 @@ function showStudyCard(note = '') {
     $('studyAnswer').disabled = false;
     $('studyAnswer').readOnly = false;
     $('studyPrimary').classList.remove('hidden');
-    $('studyPrimary').textContent = production ? 'Cevapla' : 'Kartı çevir';
     showGroups(production, false);
     renderCues();
 
-    if (production) {
+    if (entry.done) {
+        // Bu kart bu turda zaten çalışıldı: geri dönüldüğünde tekrar sorulmaz.
+        if (production) restoreAnsweredCard(entry);
+        else {
+            revealed = true;
+            $('studyDetail').classList.remove('hidden');
+            $('studySpeak').classList.toggle('hidden', !speechSupported);
+            $('studyFeedback').textContent = entry.rating
+                ? `Bu kartı “${RATING_LABELS[entry.rating]}” olarak işaretledin.` : '';
+        }
+    } else if (production) {
         $('studyAnswer').focus();
         if (entry.type === 'listen') speakText(entry.word.eng);
     }
+
+    $('studyPrimary').textContent = primaryLabel();
 }
 
 function revealHint() {
@@ -1540,7 +1555,7 @@ function revealHint() {
 /** Tanışma kartını çevirir: yeni kelimeyi ilk kez tam hâliyle gösterir. */
 function revealCard() {
     const entry = studyCards[studyIndex];
-    if (!entry || studyFinished || entry.type !== 'intro' || revealed) return;
+    if (!entry || studyFinished || entry.type !== 'intro' || revealed || entry.done) return;
     revealed = true;
     recordFlip(entry.word);
     $('studyDetail').classList.remove('hidden');
@@ -1605,6 +1620,39 @@ function markReviewed(word, rating) {
     refreshStats();
 }
 
+/** Birincil düğmenin yazısı — tek yerden, yoksa üç ayrı yerde tutarsızlaşıyor. */
+function primaryLabel() {
+    if (studyFinished) return 'Yeni tur';
+    const entry = studyCards[studyIndex];
+    if (!entry) return '';
+    if (entry.type === 'intro' && !entry.done && !revealed) return 'Kartı çevir';
+    if (entry.type !== 'intro' && !studyAnswered) return 'Cevapla';
+    return studyIndex + 1 >= studyCards.length ? 'Turu bitir →' : 'Sonraki →';
+}
+
+function verdictText(entry) {
+    return entry.verdict === 'correct'
+        ? `${VERDICT_TEXT.correct} +${entry.gained} XP`
+        : `${VERDICT_TEXT[entry.verdict]} Doğrusu: ${entry.word.eng}${entry.gained ? ` · +${entry.gained} XP` : ''}`;
+}
+
+/**
+ * Daha önce cevaplanmış bir karta geri dönüldüğünde onu **yeniden cevaplatmaz**,
+ * verdiğin cevabı gösterir. Aksi hâlde geri gidip aynı kartı tekrar tekrar
+ * cevaplayarak XP toplamak mümkün olurdu — puanı anlamsız kılan bir açık.
+ */
+function restoreAnsweredCard(entry) {
+    studyAnswered = true;
+    $('studyAnswer').value = entry.answer || '';
+    $('studyAnswer').readOnly = true;
+    $('studyFeedback').className = `stage-feedback ${entry.verdict}`;
+    $('studyFeedback').textContent = verdictText(entry);
+    $('studyDetail').classList.remove('hidden');
+    $('studySpeak').classList.toggle('hidden', !speechSupported);
+    $('studyHint').disabled = true;
+    $('studySkip').disabled = true;
+}
+
 const VERDICT_TEXT = {
     correct: '✓ Doğru.',
     near: '≈ Az kalmıştı — yazım hatası.',
@@ -1627,17 +1675,21 @@ function answerStudy(skipped = false) {
     if (verdict !== 'wrong') sessionCorrect += 1;
     sessionXP += gained;
 
+    // Sonucu kartın üstünde sakla: geri dönüldüğünde tekrar cevaplatılmaz.
+    entry.done = true;
+    entry.verdict = verdict;
+    entry.gained = gained;
+    entry.answer = skipped ? '' : $('studyAnswer').value;
+
     $('studyAnswer').readOnly = true;
     $('studyAnswer').blur();
     $('studyFeedback').className = `stage-feedback ${verdict}`;
-    $('studyFeedback').textContent = verdict === 'correct'
-        ? `${VERDICT_TEXT.correct} +${gained} XP`
-        : `${VERDICT_TEXT[verdict]} Doğrusu: ${entry.word.eng}${gained ? ` · +${gained} XP` : ''}`;
+    $('studyFeedback').textContent = verdictText(entry);
     $('studyDetail').classList.remove('hidden');
     $('studySpeak').classList.toggle('hidden', !speechSupported);
     $('studyHint').disabled = true;
     $('studySkip').disabled = true;
-    $('studyPrimary').textContent = 'Sonraki →';
+    $('studyPrimary').textContent = primaryLabel();
 }
 
 function advanceStudy() {
@@ -1652,9 +1704,14 @@ function advanceStudy() {
     showStudyCard();
 }
 
+const RATING_LABELS = { again: 'Tekrar', hard: 'Zor', easy: 'Kolay' };
+
 function rateCurrentCard(rating) {
     const entry = studyCards[studyIndex];
     if (!entry || studyFinished || entry.type !== 'intro' || !revealed) return;
+    if (entry.done) return;                 // aynı kartı iki kez değerlendirme
+    entry.done = true;
+    entry.rating = rating;
     markReviewed(entry.word, rating);
     advanceStudy();
 }
@@ -1668,10 +1725,30 @@ function studyPrimary() {
     if (studyAnswered) advanceStudy(); else answerStudy(false);
 }
 
+/**
+ * Birleştirmeden sonra `data.words` tamamen yeni nesnelerle değişiyor; elimizdeki
+ * tur o eski nesneleri tutuyor. Yeniden kurmak yerine id üzerinden yeni nesnelere
+ * bağla: bulunduğun kart, cevapladıkların ve tur ilerlemesi korunur.
+ */
+function rebindStudyCards() {
+    const byId = new Map(data.words.map(word => [word.id, word]));
+    const kalan = studyCards.filter(entry => byId.has(entry.word.id));
+    kalan.forEach(entry => { entry.word = byId.get(entry.word.id); });
+    const suanki = studyCards[studyIndex];
+    studyCards = kalan;
+    if (!studyCards.length) { buildStudy(); return; }
+    const yeniYer = suanki ? studyCards.findIndex(entry => entry.word.id === suanki.word.id) : -1;
+    studyIndex = yeniYer >= 0 ? yeniYer : Math.min(studyIndex, studyCards.length - 1);
+    if (isTabActive('study')) showStudyCard();
+}
+
+/** Gezinme. Sarma yok: ilk karttan geriye gidilmez, son karttan ileri gidilmez. */
 function moveStudy(step) {
     if (!studyCards.length) return;
     if (studyFinished) { studyFinished = false; studyIndex = 0; showStudyCard(); return; }
-    studyIndex = (studyIndex + step + studyCards.length) % studyCards.length;
+    const target = studyIndex + step;
+    if (target < 0 || target >= studyCards.length) return;
+    studyIndex = target;
     $('studySkip').disabled = false;
     showStudyCard();
 }
@@ -2667,7 +2744,20 @@ let syncNote = '';
 let syncQueued = false;                        // tur sürerken gelen istek düşürülmez, sıraya alınır
 let lastPushedAt = 0;
 
-function syncEnabled() { return Boolean(SUPABASE_URL && SUPABASE_KEY && activeUser); }
+/**
+ * Yerelde (localhost) senkron **kapalı**. Sebebi acı deneyim: geliştirirken açık kalan
+ * bir test oturumu canlı veritabanına uydurma kullanıcılar yazdı ve elle temizlemek
+ * gerekti. Gerçekten yerelde denemek gerekirse:
+ *     localStorage.setItem('lexi-dev-sync', '1')
+ */
+function localGelistirme() {
+    return ['localhost', '127.0.0.1', ''].includes(location.hostname)
+        && localStorage.getItem('lexi-dev-sync') !== '1';
+}
+
+function syncEnabled() {
+    return Boolean(SUPABASE_URL && SUPABASE_KEY && activeUser) && !localGelistirme();
+}
 
 function setSyncState(state, note = '') {
     syncState = state;
@@ -2751,7 +2841,9 @@ async function syncNow(reason = '') {
                 runMigrations();
                 saveNow();
                 renderAll();
-                if (isTabActive('study')) buildStudy();
+                // Turu baştan kurmak, çalışırken senkron gelince kullanıcıyı ilk karta
+                // atıyordu. Kartları yeni nesnelere bağla, yeri ve cevapları koru.
+                if (studyCards.length) rebindStudyCards(); else if (isTabActive('study')) buildStudy();
             }
         }
         await pushRemote(activeUser, activeUserName || activeUser, activePinHash(), data);
@@ -2784,7 +2876,7 @@ function syncAfterSave() {
 }
 
 function bindSync() {
-    if (!SUPABASE_URL || !SUPABASE_KEY) { setSyncState('off'); return; }
+    if (!SUPABASE_URL || !SUPABASE_KEY || localGelistirme()) { setSyncState('off'); return; }
     window.addEventListener('online', () => syncNow('bağlantı geri geldi'));
     window.addEventListener('offline', () => setSyncState('offline', 'Ağ yok.'));
     document.addEventListener('visibilitychange', () => {
