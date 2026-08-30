@@ -1,0 +1,10 @@
+# Kişisel veri — asla yayınlanmaz
+_yedekler/
+
+# Eski sürüm arşivi: büyük, gereksiz, yerelde dursun
+_eski/
+
+# İşletim sistemi artıkları
+Thumbs.db
+desktop.ini
+.DS_Store
