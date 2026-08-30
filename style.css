@@ -304,6 +304,7 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
     box-shadow: var(--shadow-lift);
 }
 .menu-body .small-button { text-align: left; }
+.menu-version { padding-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font: 11px var(--font-ui); }
 
 /* Günün hedefi rozetin kendi dolgusudur — ayrı bir çizgi "aktif sekme" gibi okunuyordu */
 .stat-pill.goal { position: relative; overflow: hidden; }

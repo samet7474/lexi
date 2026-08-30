@@ -31,6 +31,9 @@ const recoveryKey = name => `lexi-user-${name}-recovery`;
 const snapshotKey = name => `lexi-user-${name}-snapshots`;
 
 const SCHEMA_VERSION = 6;
+// Görünür sürüm. Telefonda hangi kodun çalıştığını tahmin etmek yerine görmek için;
+// `sw.js` içindeki CACHE ile birlikte artırılır.
+const APP_VERSION = '2026-08-30.4';
 const PAGE_SIZE = 40;
 const SNAPSHOT_LIMIT = 6;
 const SNAPSHOT_MIN_GAP_MS = 5 * 60 * 1000;
@@ -3112,6 +3115,7 @@ function bindEvents() {
         save();
         renderDashboard();
     };
+    $('appVersion').textContent = APP_VERSION;
     $('themePicker').addEventListener('click', event => {
         const option = event.target.closest('.theme-option');
         if (!option) return;
@@ -3233,7 +3237,23 @@ function startSession() {
 function registerServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
     if (!location.protocol.startsWith('http')) return;
-    navigator.serviceWorker.register('sw.js').catch(() => {});
+
+    // Yeni sürüm devralınca sayfayı bir kez yenile. Bu olmadan telefondaki uygulama
+    // eski kodu çalıştırmaya devam ediyor ve "düzelttim" dediğim şey karşıya inmiyor.
+    let yenileniyor = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (yenileniyor) return;
+        yenileniyor = true;
+        location.reload();
+    });
+
+    navigator.serviceWorker.register('sw.js').then(kayit => {
+        kayit.update().catch(() => {});
+        // Uygulama öne gelince de güncelleme ara: telefonda sekme günlerce açık kalıyor.
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') kayit.update().catch(() => {});
+        });
+    }).catch(() => {});
 }
 
 function init() {
