@@ -27,6 +27,9 @@ ayrı beceridir. Lexi ikincisine göre kurulur:
 | `app.js` | Tüm uygulama mantığı |
 | `_yedekler/` | JSON veri yedekleri (koda dâhil değil) |
 | `_eski/` | Eski sürümler — **açma**, `_eski/OKU-BENI.md` sebebini anlatır |
+| `CLAUDE.md`, `AGENTS.md` | Ajanlar için kurallar; ikisi birlikte güncellenir |
+| `SABITLER.md` | Sürüm, anahtar, adres ve eşikler — tek yerde |
+| `Backlog.md`, `Yapilanlar.md` | Açık işler / biten işler |
 
 İlk üçü aynı klasörde durmalıdır.
 

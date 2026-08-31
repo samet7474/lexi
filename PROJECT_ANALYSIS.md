@@ -28,6 +28,9 @@ Bunlar tercih değil kural. Bir öneri bunlardan birini bozuyorsa öneri yanlı�
 | `_kurulum/` | Supabase SQL'i ve yayınlama rehberi. Uygulamaya dâhil değil. |
 | `ikon/` | PWA ikonları (bağımlılıksız üretilmiş PNG) |
 | `manifest.json`, `sw.js` | PWA: ana ekrana eklenebilme ve çevrimdışı açılma |
+| `CLAUDE.md`, `AGENTS.md` | Ajan kuralları ve kısıtlar; **birlikte** güncellenir |
+| `SABITLER.md` | Değişmeyen değerlerin aynası: sürüm, anahtar, adres, eşik, formül |
+| `Backlog.md`, `Yapilanlar.md` | Açık işler / kapanan işlerin log'u |
 
 `_eski/` içindekiler aynı `localStorage` anahtarına yazar; açılırlarsa veri bozulur.
 Ayrıntı: `_eski/OKU-BENI.md`.
