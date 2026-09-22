@@ -1,0 +1,26 @@
+# Supabase ücretsiz planı 7 gün istek gelmeyen projeyi uykuya alır; uyuyan projede
+# uygulama "çevrimdışı" gösterir (2026-09-22'de böyle oldu). Bu iş 3 günde bir
+# veritabanına küçük bir okuma isteği atıp projeyi uyanık tutar.
+# Anahtar app.js'teki yayınlanabilir anahtarın aynısı: herkese açık olması için tasarlandı.
+# İstek başarısız olursa iş kırmızı düşer ve GitHub e-posta ile haber verir.
+name: Supabase uyanık tut
+
+on:
+  schedule:
+    - cron: '0 6 */3 * *'   # 3 günde bir, 06:00 UTC (09:00 TR)
+  workflow_dispatch:         # Actions sekmesinden elle çalıştırmak için
+
+jobs:
+  durt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Veritabanına okuma isteği at
+        env:
+          URL: https://atizezifilmxuqxjrjnt.supabase.co
+          KEY: sb_publishable_gIIesmnDKhfQR5GweQmgLQ_BMjWBeDt
+        run: |
+          kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+            "$URL/rest/v1/lexi_users?select=slug&limit=1" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+          echo "HTTP $kod"
+          test "$kod" = "200"
