@@ -1,26 +1,63 @@
-# Supabase ücretsiz planı 7 gün istek gelmeyen projeyi uykuya alır; uyuyan projede
-# uygulama "çevrimdışı" gösterir (2026-09-22'de böyle oldu). Bu iş 3 günde bir
-# veritabanına küçük bir okuma isteği atıp projeyi uyanık tutar.
+# Supabase ücretsiz planı, bir hafta boyunca "yeterli veritabanı etkinliği" görmeyen projeyi
+# uykuya alır. Uyuyan projede Lexi "çevrimdışı" der, oyun sitesi (samet7474.github.io/oyun) açılmaz.
+#
+# İlk sürüm 3 günde bir tek okuma atıyordu; buna rağmen proje 2026-10-01'den önce uyudu.
+# Supabase'in belgesi ölçüyü "her gün veritabanına birkaç istek" diye koyuyor
+# (supabase.com/docs/guides/platform/free-project-pausing). Bu yüzden 2026-10-25'ten beri iş:
+#   - 6 saatte bir çalışır (günde 4 kez),
+#   - Lexi ve oyun tablolarından birer okuma yapar,
+#   - `uyanik` tablosundaki tek satıra bir yazma yapar (son zaman + sayaç).
 # Anahtar app.js'teki yayınlanabilir anahtarın aynısı: herkese açık olması için tasarlandı.
 # İstek başarısız olursa iş kırmızı düşer ve GitHub e-posta ile haber verir.
 name: Supabase uyanık tut
 
 on:
   schedule:
-    - cron: '0 6 */3 * *'   # 3 günde bir, 06:00 UTC (09:00 TR)
+    - cron: '17 */6 * * *'   # 6 saatte bir, saat başı kalabalığından kaçmak için :17'de
   workflow_dispatch:         # Actions sekmesinden elle çalıştırmak için
+
+permissions:
+  actions: write             # Son adım bu işi yeniden "etkin" işaretler
 
 jobs:
   durt:
     runs-on: ubuntu-latest
+    env:
+      URL: https://atizezifilmxuqxjrjnt.supabase.co
+      KEY: sb_publishable_gIIesmnDKhfQR5GweQmgLQ_BMjWBeDt
     steps:
-      - name: Veritabanına okuma isteği at
-        env:
-          URL: https://atizezifilmxuqxjrjnt.supabase.co
-          KEY: sb_publishable_gIIesmnDKhfQR5GweQmgLQ_BMjWBeDt
+      - name: Lexi ve oyun tablolarından okuma yap
         run: |
-          kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
-            "$URL/rest/v1/lexi_users?select=slug&limit=1" \
-            -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
-          echo "HTTP $kod"
-          test "$kod" = "200"
+          for tablo in "lexi_users?select=slug&limit=1" "oyun_odalari?select=kod&limit=1"; do
+            kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 \
+              "$URL/rest/v1/$tablo" \
+              -H "apikey: $KEY" -H "Authorization: Bearer $KEY")
+            echo "okuma $tablo -> HTTP $kod"
+            test "$kod" = "200"
+          done
+
+      - name: Nabız satırına yazma yap
+        run: |
+          sayac=$(curl -s --max-time 30 \
+            "$URL/rest/v1/uyanik?id=eq.1&select=sayac" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" | jq -r '.[0].sayac')
+          yeni=$((sayac + 1))
+          simdi=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          kod=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X PATCH \
+            "$URL/rest/v1/uyanik?id=eq.1" \
+            -H "apikey: $KEY" -H "Authorization: Bearer $KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"son\":\"$simdi\",\"sayac\":$yeni}")
+          echo "yazma sayac=$yeni -> HTTP $kod"
+          test "$kod" = "204"
+
+      # GitHub, 60 gün commit görmeyen depoda zamanlı işleri kapatır. Lexi'ye uzun süre
+      # dokunulmazsa bu iş de susar. İşi her turda yeniden "etkin" işaretlemek bu sayacı
+      # sıfırlamak için kullanılan bilinen yöntem (keepalive-workflow'un API yöntemi);
+      # GitHub belgesinde açıkça yazmıyor, kontrol edilmedi.
+      - name: Zamanlı işin kapanmasını önle
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X PUT "repos/${{ github.repository }}/actions/workflows/uyan.yml/enable"
+          echo "iş etkin işaretlendi"
