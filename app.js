@@ -33,7 +33,7 @@ const snapshotKey = name => `lexi-user-${name}-snapshots`;
 const SCHEMA_VERSION = 6;
 // Görünür sürüm. Telefonda hangi kodun çalıştığını tahmin etmek yerine görmek için;
 // `sw.js` içindeki CACHE ile birlikte artırılır.
-const APP_VERSION = '2026-10-28.1';
+const APP_VERSION = '2026-10-28.2';
 const PAGE_SIZE = 40;
 const SNAPSHOT_LIMIT = 6;
 const SNAPSHOT_MIN_GAP_MS = 5 * 60 * 1000;
@@ -1797,7 +1797,10 @@ function rebindStudyCards() {
     if (!studyCards.length) { buildStudy(); return; }
     const yeniYer = suanki ? studyCards.findIndex(entry => entry.word.id === suanki.word.id) : -1;
     studyIndex = yeniYer >= 0 ? yeniYer : Math.min(studyIndex, studyCards.length - 1);
-    if (isTabActive('study')) showStudyCard();
+    // Kart hâlâ yerindeyse yeniden çizme: çizmek çevrilmiş kartı kapatıyor, yazılan
+    // cevabı siliyordu; sekme her gizlenip açıldığında senkron geldiği için kullanıcı
+    // sürekli başa atılıyordu (2026-10-28).
+    if (isTabActive('study') && yeniYer < 0) showStudyCard();
 }
 
 /** Gezinme. Sarma yok: ilk karttan geriye gidilmez, son karttan ileri gidilmez. */
