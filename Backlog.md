@@ -4,7 +4,7 @@ Yalnızca **açık** işler. Biten madde silinmez, tarihiyle `Yapilanlar.md`'ye 
 Gerekçeler ve tartışma burada değil: vault `MyMind/🏰 300-Projects/Lexi/` altında
 `Kararlar.md` (neden) ve `Fikirler.md` (ham fikir). Burası "ne yapılacak" listesidir.
 
-Güncelleme: 2026-09-01
+Güncelleme: 2026-10-28
 
 ## Şimdi — darboğaz veri, özellik değil
 
@@ -21,6 +21,8 @@ görünür ve düzeltilebilir kıldı; kalan iş Karpuz'un elinde.
 - [ ] **Telefon/tablet saha testi:** ana ekrana ekleme, uçak modunda açılış, aynı
       kullanıcı + PIN ile kelimelerin inmesi. (Sürüm 2026-08-30.4 telefonda açıldı;
       çevrimdışı ve ana ekran denenmedi.)
+- [ ] **Sadeleştirme (2026-10-28.1) telefonda görüldü mü?** Menüde sürüm
+      `2026-10-28.1` yazmalı; açılışta tek "Başla" düğmesi çıkmalı.
 
 ## Bakım
 
@@ -32,8 +34,8 @@ görünür ve düzeltilebilir kıldı; kalan iş Karpuz'un elinde.
 
 ## Karar bekleyen
 
-- [ ] **Test sekmesi kalsın mı?** Artık XP vermiyor, tanıma kontrolü yapıyor.
-      Challenge'ın bir modu mu olsun? Bir süre kullanıp karar ver.
+- [ ] **Menüdeki Test / Oyunlar / Sözlük tamamen kalksın mı?** 2026-10-28'de sekmeden
+      menüye indi, kod yerinde. Bir süre kimse açmazsa silinebilir.
 - [ ] **Üç tema da kalsın mı?** Kullanılmayan tema bakım yüküdür.
 - [ ] **`app.js` tek dosya (3280 satır) bölünsün mü?** Build yasağı yüzünden bölmek
       `<script>` çoğaltmak demek; riski faydasından büyük olabilir.

@@ -8,7 +8,7 @@ yanında ne değişir" sorusunun cevabıdır.
 Bir sabiti değiştirdiğinde **bu tabloyu da güncelle.** Değer burada ve kodda farklıysa
 kod haklıdır; tablo bozuktur.
 
-Son eşitleme: 2026-09-01.
+Son eşitleme: 2026-10-28.
 
 ## Kimlik ve adres
 
@@ -28,8 +28,8 @@ Publishable anahtar **bilerek açıktır**; yetkisi RLS ve `lexi_save` ile sın�
 
 | Sabit | Değer | Yer |
 | --- | --- | --- |
-| `APP_VERSION` | `2026-08-30.4` | app.js §1 — menüde görünür |
-| `CACHE` | `lexi-v4` | sw.js |
+| `APP_VERSION` | `2026-10-28.1` | app.js §1 — menüde görünür |
+| `CACHE` | `lexi-v5` | sw.js |
 | `SCHEMA_VERSION` | `6` | app.js §1 |
 
 Davranış değiştiğinde `APP_VERSION` **ve** `CACHE` birlikte artar; artmazsa telefonlara

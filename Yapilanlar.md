@@ -3,6 +3,18 @@
 `Backlog.md`'den kapanan maddeler tarihiyle buraya iner. Neyi ne zaman bitirdiğim de
 kayıttır; gerekçeler vault'taki `Kararlar.md`'de.
 
+## 2026-10-28 — Sadeleştirme (sürüm 2026-10-28.1)
+- Uygulama Kütüphane'de değil **Çalış**'ta açılıyor: tek cümle + tek büyük "Başla".
+  Kelime yoksa "İlk kelimeni ekle".
+- Sekmeler 6 → 2 (**Çalış · Kelimelerim**); Test, Oyunlar, Sözlük, İstatistikler
+  ⋯ menüsüne indi. Hiçbiri silinmedi.
+- Üst şerit 4 simge → 2 yazılı sayı ("4 gün", "3/10 bugün"); görev şeridi kalktı.
+- Mod / kuyruk / klasör seçicileri katlı "Çalışma ayarları"na girdi; klavye satırı
+  dokunmatik ekranda gizli.
+- Tanışma düğmeleri: Bilmiyordum / Biraz biliyordum / Biliyordum (SRS aynı).
+- Her karttaki iki uyarı kutusu → tek "✎ Kartı düzelt"; tanım ve cümle birlikte düzenlenir.
+- Kelime formu 3 alan; gerisi "Daha fazla" altında.
+
 ## 2026-08-30 — Faz 0–5, tek günde
 
 ### Faz 0 · Temizlik

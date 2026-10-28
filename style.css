@@ -246,7 +246,7 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
 .tab:hover { color: var(--ink); background: var(--surface-2); }
 .tab.active { color: var(--accent-ink); background: var(--accent); }
 
-/* Durum: seri, bugünkü XP, hedef, vade — dört sayı, tek şerit */
+/* Durum: seri ve günün hedefi — iki sayı, yazıyla; simgeye bakıp tahmin ettirmez */
 .status { display: flex; align-items: center; gap: 6px; }
 .stat-pill {
     display: flex; align-items: center; gap: 6px;
@@ -257,8 +257,6 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
     white-space: nowrap;
 }
 .stat-pill i { font-style: normal; opacity: .7; font-size: 12px; }
-.stat-pill.xp { color: var(--accent); border-color: var(--accent-soft); background: var(--accent-soft); }
-.stat-pill.due { color: var(--highlight); border-color: var(--highlight-soft); background: var(--highlight-soft); }
 
 .header-actions { display: flex; align-items: center; gap: 8px; }
 
@@ -304,6 +302,8 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
     box-shadow: var(--shadow-lift);
 }
 .menu-body .small-button { text-align: left; }
+.menu-group { display: grid; gap: 6px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.menu-label { color: var(--muted); font: 700 11px var(--font-ui); text-transform: uppercase; letter-spacing: 1px; }
 .menu-version { padding-top: 4px; border-top: 1px solid var(--line); color: var(--muted); font: 11px var(--font-ui); }
 
 /* Günün hedefi rozetin kendi dolgusudur — ayrı bir çizgi "aktif sekme" gibi okunuyordu */
@@ -395,10 +395,37 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
 }
 .study-bar { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
 .study-meta-line { display: flex; align-items: center; gap: 9px; color: var(--muted); font-size: 13px; }
-.queue-badge { padding: 3px 10px; border-radius: var(--pill); color: var(--accent); background: var(--accent-soft); font: 700 11px var(--font-ui); }
-.study-controls { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
-.study-controls select { width: auto; padding: 7px 10px; font-size: 13px; background: var(--surface-2); border-color: transparent; }
+.study-controls { display: grid; gap: 10px; margin-top: 12px; text-align: left; }
+.study-controls select { padding: 7px 10px; font-size: 13px; background: var(--surface-2); border-color: transparent; }
 .study-controls select:hover { border-color: var(--line); }
+
+/* Açılış: tek cümle, tek büyük düğme. Seçenekler katlı. */
+.study-start {
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    padding: 56px 22px 28px; text-align: center;
+    border: 1px solid var(--line); border-radius: var(--radius-lg);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+}
+.start-title { font: 700 clamp(26px, 4vw, 38px) var(--font-display); line-height: 1.15; letter-spacing: -.01em; }
+.start-sub { max-width: 440px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.start-button {
+    min-width: 220px; margin-top: 14px; padding: 18px 40px;
+    border-radius: var(--pill);
+    color: var(--accent-ink); background: var(--accent);
+    font: 700 20px var(--font-ui);
+    box-shadow: var(--shadow-lift);
+    transition: filter .15s, transform .15s;
+}
+.start-button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.start-link { padding: 6px 8px; color: var(--muted); font: 600 13px var(--font-ui); text-decoration: underline; text-underline-offset: 3px; }
+.start-link:hover { color: var(--ink); }
+.study-options { width: 100%; max-width: 360px; margin-top: 22px; color: var(--muted); font-size: 13px; }
+.study-options > summary { cursor: pointer; }
+.form-more { margin-top: 4px; }
+.form-more > summary { cursor: pointer; color: var(--muted); font: 600 13px var(--font-ui); margin-bottom: 10px; }
+.form-more[open] { display: grid; gap: 12px; }
+.fix-field { display: grid; gap: 4px; width: 100%; text-align: left; }
 
 .progress { height: 3px; margin-bottom: 26px; border-radius: var(--pill); background: var(--surface-2); overflow: hidden; }
 .progress span { display: block; width: 0; height: 100%; background: var(--accent); transition: width .3s ease; }
@@ -423,7 +450,7 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
 .stage-cue-line { max-width: 640px; margin: 14px auto 0; color: var(--muted); font-size: 15px; line-height: 1.5; }
 .stage-cue-line.turk { color: var(--highlight); }
 .cue-nudge { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; opacity: .7; }
-.detail-nudge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.detail-nudge { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
 .detail-nudge > span { flex: 1; min-width: 200px; color: var(--warn); font-size: 12px; }
 .detail-nudge-actions { display: flex; gap: 7px; }
 .sentence-draft { flex: 1 1 100%; min-height: 56px; resize: vertical; font-size: 13px; }
@@ -486,12 +513,6 @@ textarea { min-height: 78px; resize: vertical; font-family: var(--font-ui); }
 .kbd-hint kbd { padding: 2px 7px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: var(--surface-2); color: var(--muted); font: 600 11px var(--font-ui); }
 .kbd-hint span { align-self: center; color: var(--muted); font-size: 12px; }
 
-/* Günün görevleri — çalışma ekranının altında, işi bölmeden */
-.task-panel { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-top: 16px; }
-.task { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); color: var(--muted); font-size: 13px; }
-.task.done { color: var(--good); border-color: transparent; background: var(--good-soft); }
-.task-mark { flex: 0 0 21px; width: 21px; height: 21px; display: grid; place-items: center; border: 2px solid var(--line); border-radius: 50%; font: 700 12px var(--font-ui); }
-.task.done .task-mark { color: var(--accent-ink); border-color: var(--good); background: var(--good); }
 
 /* ---------------------------------------------------------------- 6. Test / pratik */
 
@@ -662,7 +683,6 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
 }
 
 @media (max-width: 620px) {
-    .status .stat-pill i { display: none; }
     .stat-pill { padding: 6px 9px; font-size: 12px; }
     .brand span:not(.brand-mark) { display: none; }
 }
@@ -678,13 +698,11 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
 
 @media (max-width: 760px) {
     .shell { padding: 0 14px 48px; }
-    .stats-grid, .task-panel { grid-template-columns: 1fr 1fr; }
-    .task-panel .task:last-child { grid-column: 1 / -1; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .study-start { padding: 40px 16px 22px; }
     .form-grid, .word-row, .practice-options { grid-template-columns: 1fr; }
     .row-actions { justify-content: flex-end; }
     .study-panel { padding: 16px 15px 18px; }
-    .study-controls { width: 100%; justify-content: stretch; }
-    .study-controls select { flex: 1; }
     .study-actions { flex-wrap: wrap; }
     .study-side { flex: 1 1 100%; justify-content: center; }
     .history-row { grid-template-columns: 74px 1fr auto; font-size: 12px; }
@@ -692,6 +710,11 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); backdrop-filter: blur(2px); }
     .matching-card { padding: 10px 8px; font-size: 12px; }
     .falling-options { grid-template-columns: 1fr; right: 10px; bottom: 10px; left: 10px; }
     .falling-arena { min-height: 350px; }
+}
+
+/* Dokunmatik ekranda klavye kısayolu satırı yalnızca yer kaplar */
+@media (hover: none) {
+    .kbd-hint { display: none; }
 }
 
 /* Erişilebilirlik: animasyon azaltma tercihi */

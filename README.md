@@ -35,15 +35,17 @@ ayrı beceridir. Lexi ikincisine göre kurulur:
 
 ## Görünüm ve düzen
 
-Sayfanın tek sabit parçası **üst şerit**: kimlik, sekmeler ve günün dört sayısı
-(seri · bugünkü XP · hedef · vadesi gelen). Hedef, kendi rozetinin içinde dolan bir
-çubuk olarak görünür — ayrıca yer kaplamaz.
+Uygulama **Çalış** ekranında açılır: tek cümle ("Bugün 12 kelime seni bekliyor") ve
+tek büyük **Başla** düğmesi. Kelime yoksa düğme "İlk kelimeni ekle" olur. Mod, kuyruk
+ve klasör seçimi bu ekrandaki katlı **Çalışma ayarları**nda; dokunmazsan günlük akış çalışır.
 
-Açılışta çalışma ekranı katlamanın **üstündedir**. Eskiden dev bir başlık, dört pano
-kartı ve üç görev çipi ilk ekranı yiyor, çalışmaya başlamak için aşağı kaydırmak
-gerekiyordu. Günün görevleri artık Çalış sekmesinin altında, işi bölmeyen bir şerit.
-Klasör listesi yalnızca Kütüphane'de görünür; yedek alma ve günlük hedef gibi nadir
-işler sağ üstteki **⋯** menüsünde.
+Sayfanın tek sabit parçası **üst şerit**: kimlik, iki sekme (**Çalış · Kelimelerim**) ve
+iki sayı: seri (`🔥 4 gün`) ve günün hedefi (`3/10 bugün`, rozetin içinde dolan çubukla).
+Bugünkü XP turun sonunda, zamanı gelen kelime sayısı açılış ekranında görünür.
+
+İstatistikler, Sözlük, Test ve Oyunlar (Challenge) sağ üstteki **⋯** menüsünün
+"Diğer" bölümünde; tema, günlük hedef ve yedek de orada. Sadeleştirmenin gerekçesi
+vault'ta (`Kararlar.md`, 2026-10-28).
 
 ### Temalar
 
@@ -59,11 +61,14 @@ Tema yalnızca `style.css` içindeki token'ları değiştirir; `app.js` hiçbir 
 
 ## Sekmeler
 
-**Çalış · Kütüphane · Test · Challenge · Sözlük · İstatistikler**
+**Çalış · Kelimelerim** — gerisi **⋯ → Diğer**: İstatistikler · Sözlük · Test · Oyunlar
 
-### Kütüphane
+### Kelimelerim (kodda `library`)
 
 Kelime ekleme, düzenleme, silme; klasörler; arama; sayfalama.
+
+Formda üç alan görünür: İngilizce, Türkçe, gördüğün cümle. Gerisi **Daha fazla**
+altında; düzenlenen kartta o alanlardan biri doluysa açık gelir.
 
 Kart alanları:
 
@@ -90,9 +95,9 @@ doğru ama bağlamı daraltmaz — "The clean room looked ___ to the visitors" b
 beş kelime oturur. Bu kartlar `otomatik cümle` diye işaretlenir. Kaynakta gördüğün gerçek
 cümleyi yazdığında işaret kalkar.
 
-**Eksikleri akışın içinde kapat.** Çalışırken cevap verdikten sonra kart açılır; tanım
-yoksa ya da cümle otomatikse orada **Tanım ekle** / **Cümleyi düzelt** düğmeleri çıkar.
-Kütüphaneye gitmeden, turu bölmeden doldurursun.
+**Eksikleri akışın içinde kapat.** Çalışırken cevap verdikten sonra kart açılır; altındaki
+**✎ Kartı düzelt** bağlantısı tanımı ve cümleyi birlikte düzenletir. Boş bıraktığın alan
+eskisini korur. Kelimelerim'e gitmeden, turu bölmeden doldurursun.
 
 ### Çalış
 
@@ -104,7 +109,7 @@ Beş mod, tek motor. Üstteki ilk seçici modu, ikincisi hangi kartların gelece
 | Boşluk doldurma | Cümlede boşluk, kelimeyi yaz |
 | Anlamdan kelimeye | Tanımı (yoksa Türkçesini) gör, İngilizceyi yaz |
 | Dinle ve yaz | Sesi dinle, duyduğunu yaz |
-| Kart (tanışma) | Klasik flashcard + Tekrar/Zor/Kolay |
+| Kart (tanışma) | Klasik flashcard + Bilmiyordum / Biraz biliyordum / Biliyordum |
 
 Kuyruk seçenekleri: vadesi gelenler · hiç çalışılmamışlar · zorlandıklarım · tüm kartlar.
 (Günlük akışta kuyruk otomatiktir, seçici kapanır.)
@@ -129,7 +134,8 @@ Cevap verdiğinde kartın tamamı (tanım, Türkçe, cümle, kalıp, kaynak, not
 |---|---|
 | `Enter` | Cevapla / sonraki karta geç |
 | `H` | Bir sonraki ipucunu aç |
-| `1` `2` `3` | Tanışma kartında Tekrar / Zor / Kolay |
+| `Enter` (açılışta) | Başla |
+| `1` `2` `3` | Tanışma kartında Bilmiyordum / Biraz biliyordum / Biliyordum |
 | `←` | Önceki kart |
 | `S` | Seslendir |
 

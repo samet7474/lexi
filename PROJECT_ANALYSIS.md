@@ -175,8 +175,10 @@ açılır; diğer modlarda `#studyCues` içinde çip olarak.
 ama **bağlamı daraltmaz**; kütüphanede işaretlenir, `filler` filtresiyle süzülür ve
 çalışma ekranında düzeltme düğmesi çıkarır.
 
-`openFieldFix()` / `saveFieldFix()` turu bölmeden `definition` ya da `sentence` alanını
-düzenler (`FIX_FIELDS` tablosu). Olay bağlama `#studyDetail` üzerinde delegasyonla.
+`openFieldFix(id)` / `saveFieldFix(id)` turu bölmeden `definition` ve `sentence`
+alanlarını birlikte düzenler (`FIX_FIELDS` tablosu); boş bırakılan alan eskisini korur.
+Tek giriş noktası kartın altındaki "✎ Kartı düzelt" bağlantısı (`data-fix-open`).
+Olay bağlama `#studyDetail` üzerinde delegasyonla.
 
 ### Cevap değerlendirme
 
@@ -226,9 +228,19 @@ Eski `darkMode` bayrağı "odak" temasına karşılık gelir, geriye dönük oku
 
 ### Yerleşim kararları
 
-- **Üst şerit sabit** (`position: sticky`): kimlik, sekmeler, günün dört sayısı.
+- **Üst şerit sabit** (`position: sticky`): kimlik, iki sekme, iki sayı (seri, hedef).
+  Sayılar yazıyla ("4 gün", "3/10 bugün"): simgeli rozetlerin anlamı yalnızca fareyle
+  görünüyordu, telefonda hiç.
+- **Açılış ekranı** (`#studyStart`, 2026-10-28): Çalış'a her girişte tur kurulmaz;
+  `renderStudyStart()` `planStudy()` ile kart sayısını hesaplar ve tek "Başla" düğmesi
+  gösterir. `startStudy()` turu kurar (`buildStudy`) ve `#studyPanel`'i açar, "← Çık"
+  (`showStudyStart`) geri döner. `studyStarted()` turun açık olup olmadığını söyler;
+  senkron ve yedek geri yükleme turu yalnızca açıksa yeniden bağlar/kurar.
+- **İki sekme, gerisi menüde.** Test, Challenge, Sözlük, İstatistikler `#menuViews`
+  düğmeleriyle `switchTab`'a gider; görünümler ve kodları yerinde, silinmedi.
 - **Çalışma ekranı katlamanın üstünde.** Eski hero + pano + görev çipleri ilk ekranı
-  yiyordu; hepsi kaldırıldı ya da taşındı.
+  yiyordu; hepsi kaldırıldı ya da taşındı. Görev şeridi 2026-10-28'de tamamen kalktı
+  (hedef rozetinin tekrarıydı).
 - **Hedef göstergesi rozetin dolgusu** (`.goal-fill`). Ayrı bir çizgi olarak denendi,
   "aktif sekme çizgisi" gibi okundu.
 - **Klasör kenar çubuğu Kütüphane'nin içinde** — çalışırken klasör seçimi zaten

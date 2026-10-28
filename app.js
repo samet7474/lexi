@@ -33,7 +33,7 @@ const snapshotKey = name => `lexi-user-${name}-snapshots`;
 const SCHEMA_VERSION = 6;
 // Görünür sürüm. Telefonda hangi kodun çalıştığını tahmin etmek yerine görmek için;
 // `sw.js` içindeki CACHE ile birlikte artırılır.
-const APP_VERSION = '2026-08-30.4';
+const APP_VERSION = '2026-10-28.1';
 const PAGE_SIZE = 40;
 const SNAPSHOT_LIMIT = 6;
 const SNAPSHOT_MIN_GAP_MS = 5 * 60 * 1000;
@@ -639,7 +639,7 @@ function runMigrations() {
 
 /* ---------------------------------------------------------------- Durum */
 
-let activeTab = 'library';
+let activeTab = 'study';             // uygulama çalışma ekranında açılır
 let activeFolder = 'all';
 let editingId = null;
 let folderBeingEdited = null;
@@ -783,25 +783,15 @@ function renderDashboard() {
     const goal = data.stats.goal || 10;
     const today = todayKey();
     const produced = data.stats.prodByDay[today] || 0;
-    const due = dueCount();
 
-    $('dueStat').textContent = due;
-    $('streakStat').textContent = data.stats.streak || 0;
-    $('xpStat').textContent = `+${data.stats.xpByDay[today] || 0}`;
-    $('xpStat').title = `Bugün +${data.stats.xpByDay[today] || 0} XP · toplam ${data.stats.xp || 0} XP`;
-    $('goalText').textContent = `${Math.min(produced, goal)} / ${goal}`;
+    // Üst şeritte iki sayı: seri ve günün hedefi. XP turun sonunda, vade açılış ekranında.
+    // Simgelerin anlamı yalnızca fareyle görünüyordu, telefonda hiç; sayı artık kendini anlatıyor.
+    const streak = data.stats.streak || 0;
+    $('streakStat').textContent = `${streak} gün`;
+    $('goalText').textContent = `${Math.min(produced, goal)}/${goal} bugün`;
     $('goalSelect').value = goal;
     $('goalBar').style.width = `${Math.min(100, (produced / goal) * 100)}%`;
-
-    // Görevler de üretime bakar: kart çevirmek görev tamamlamaz.
-    const tasks = [
-        { label: `${goal} üretim tamamla`, done: produced >= goal },
-        { label: 'Yeni bir kelimeyle tanış', done: (data.stats.introToday || 0) >= 1 },
-        { label: 'Vadesi geleni bitir', done: Boolean(data.words.length) && due === 0 }
-    ];
-    $('taskList').innerHTML = tasks.map(task =>
-        `<div class="task ${task.done ? 'done' : ''}"><span class="task-mark">${task.done ? '✓' : ''}</span><span>${task.label}</span></div>`
-    ).join('');
+    if (isTabActive('study')) renderStudyStart();
 }
 
 function renderFolders() {
@@ -1075,7 +1065,7 @@ function folderPool(selectId) {
 }
 
 const QUEUE_LABELS = {
-    due: 'vadesi gelen',
+    due: 'zamanı gelen',
     new: 'hiç çalışılmamış',
     hard: 'zorlandığın',
     all: 'toplam'
@@ -1286,6 +1276,18 @@ let sessionXP = 0;
  * gelenleri üretimle çalış. Tanıma yönü (kart) artık ana mod değil.
  */
 function buildStudy() {
+    const { cards, note } = planStudy();
+    studyCards = cards;
+    studyIndex = 0;
+    studyFinished = false;
+    sessionProduced = 0;
+    sessionCorrect = 0;
+    sessionXP = 0;
+    showStudyCard(note);
+}
+
+/** Seçili mod/kuyruk/klasöre göre turun kartları. Ekrana dokunmaz; açılış ekranı da sayar. */
+function planStudy() {
     const pool = folderPool('studyFolder');
     const mode = studyMode();
     const queue = $('studyQueue').value;
@@ -1318,15 +1320,60 @@ function buildStudy() {
         picked = queue === 'due' && !note ? picked : shuffle(picked);
         cards = picked.map(word => ({ word, type: exerciseFor(word, mode) }));
     }
+    return { cards, note, pool };
+}
 
-    studyCards = cards;
-    studyIndex = 0;
-    studyFinished = false;
-    sessionProduced = 0;
-    sessionCorrect = 0;
-    sessionXP = 0;
-    $('studyQueueBadge').textContent = `${dueCount(pool)} vadesi geldi`;
-    showStudyCard(note);
+/* ---- Açılış ekranı ---- */
+
+function studyStarted() { return !$('studyPanel').classList.contains('hidden'); }
+
+/**
+ * Yeni gelen birini üç açılır menü ve dört düğme karşılıyordu. Artık tek cümle ve
+ * tek düğme: "Başla". Mod, kuyruk ve klasör "Çalışma ayarları" katının içinde.
+ */
+function renderStudyStart() {
+    if (studyStarted()) return;
+    const { cards, note, pool } = planStudy();
+    const button = $('startStudy');
+    $('startAddWord').classList.toggle('hidden', !data.words.length);
+    $('studyOptions').classList.toggle('hidden', !data.words.length);
+    if (!data.words.length) {
+        $('startTitle').textContent = 'Henüz kelimen yok';
+        $('startSub').textContent = 'Bir kelime ekle, cümlesiyle birlikte. Sonra burada çalışırsın.';
+        button.textContent = 'İlk kelimeni ekle';
+        button.dataset.action = 'add';
+        return;
+    }
+    if (!cards.length) {
+        $('startTitle').textContent = 'Bu klasörde çalışılacak kelime yok';
+        $('startSub').textContent = pool.length ? 'Çalışma ayarlarından başka kelimeler seç.' : 'Bu klasör boş. Ayarlardan başka klasör seç.';
+        button.textContent = 'Kelime ekle';
+        button.dataset.action = 'add';
+        return;
+    }
+    $('startTitle').textContent = note
+        ? 'Bugün bekleyen kelime yok'
+        : `Bugün ${cards.length} kelime seni bekliyor`;
+    const goal = data.stats.goal || 10;
+    const produced = data.stats.prodByDay[todayKey()] || 0;
+    $('startSub').textContent = note
+        ? `İstersen ${cards.length} kelimelik karışık bir tur çalış.`
+        : (produced ? `Bugün ${Math.min(produced, goal)}/${goal} yazdın.` : 'Cümledeki boşluğa kelimeyi yazacaksın. Anlamı hep görünür.');
+    button.textContent = 'Başla';
+    button.dataset.action = 'study';
+}
+
+function showStudyStart() {
+    $('studyPanel').classList.add('hidden');
+    $('studyStart').classList.remove('hidden');
+    renderStudyStart();
+}
+
+function startStudy() {
+    if ($('startStudy').dataset.action === 'add') { openNewWord(); return; }
+    $('studyStart').classList.add('hidden');
+    $('studyPanel').classList.remove('hidden');
+    buildStudy();
 }
 
 /* ---- Ekran ---- */
@@ -1360,8 +1407,7 @@ function revealedLetters(entry) {
 function meaningCueHTML(word) {
     const definition = String(word.definition || '').trim();
     if (definition) return `<div class="stage-cue-line">${escapeHTML(definition)}</div>`;
-    return `<div class="stage-cue-line turk">${escapeHTML(word.turk)}`
-        + `<span class="cue-nudge">İngilizce tanım yazarsan bu satır İngilizce olur</span></div>`;
+    return `<div class="stage-cue-line turk">${escapeHTML(word.turk)}</div>`;
 }
 
 function acceptedForms(entry) {
@@ -1395,51 +1441,51 @@ function studyDetailHTML(word) {
         ['Kaynak', word.source],
         ['Hatırlama notu', word.mnemonic]
     ].filter(row => String(row[1] || '').trim());
-    // Kartın eksiğini akışın içinde kapatabilmek, kütüphaneye gitmekten çok daha ucuz.
-    const gaps = [];
-    if (!String(word.definition || '').trim()) {
-        gaps.push(['definition', 'İngilizce tanım yok — anlamı en keskin daraltan alan bu.', 'Tanım ekle']);
-    }
-    if (isFillerSentence(word)) {
-        gaps.push(['sentence', 'Bu cümle otomatik üretildi — kaynakta gördüğün gerçek cümle daha iyi çalışır.', 'Cümleyi düzelt']);
-    }
-    const nudge = gaps.map(([field, text, label]) =>
-        `<div class="detail-nudge" data-field="${field}"><span>${text}</span>`
-        + `<button type="button" class="small-button" data-fix-field="${field}" data-fix-id="${word.id}">${label}</button></div>`
-    ).join('');
+    // Eksik kartta eskiden iki uyarı kutusu çıkıyordu; tanımsız 88 kartın her birinde
+    // dırdır oldu. Artık tek sessiz bağlantı, açınca tanım ve cümle birlikte düzenlenir.
+    const fix = `<div class="detail-nudge"><button type="button" class="start-link" data-fix-open="${word.id}">✎ Kartı düzelt</button></div>`;
     return `<div class="detail-head"><strong>${escapeHTML(word.eng)}</strong></div>`
         + rows.map(row => `<p><span>${row[0]}</span> ${escapeHTML(row[1])}</p>`).join('')
-        + nudge;
+        + fix;
 }
 
 const FIX_FIELDS = {
-    definition: { placeholder: 'Basit İngilizce tanım — sözlükteki learner tanımı gibi...', empty: 'Tanım boş olamaz.' },
-    sentence: { placeholder: 'Kelimeyi gördüğün gerçek cümleyi yaz...', empty: 'Cümle boş olamaz.' }
+    definition: { label: 'İngilizce tanım', placeholder: 'Basit İngilizce tanım — sözlükteki learner tanımı gibi...' },
+    sentence: { label: 'Gördüğün cümle', placeholder: 'Kelimeyi gördüğün gerçek cümleyi yaz...' }
 };
 
-/** Çalışma akışını bırakmadan kartın eksik alanını doldurur. */
-function openFieldFix(field, id) {
+/** Çalışma akışını bırakmadan kartın tanımını ve cümlesini düzenler. */
+function openFieldFix(id) {
     const word = data.words.find(item => item.id === id);
-    const host = $('studyDetail').querySelector(`.detail-nudge[data-field="${field}"]`);
-    if (!word || !host || !FIX_FIELDS[field]) return;
-    host.innerHTML = `<textarea class="sentence-draft" rows="2" placeholder="${escapeHTML(FIX_FIELDS[field].placeholder)}"></textarea>`
+    const host = $('studyDetail').querySelector('.detail-nudge');
+    if (!word || !host) return;
+    host.innerHTML = Object.entries(FIX_FIELDS).map(([field, info]) =>
+        `<label class="fix-field">${info.label}<textarea rows="2" data-fix-field="${field}" placeholder="${escapeHTML(info.placeholder)}">`
+        + `${escapeHTML(isFillerSentence(word) && field === 'sentence' ? '' : (word[field] || ''))}</textarea></label>`
+    ).join('')
         + `<div class="detail-nudge-actions"><button type="button" class="small-button" data-cancel-fix="1">Vazgeç</button>`
-        + `<button type="button" class="small-button" data-save-field="${field}" data-fix-id="${word.id}">Kaydet</button></div>`;
+        + `<button type="button" class="small-button" data-save-fix="${word.id}">Kaydet</button></div>`;
     host.querySelector('textarea').focus();
 }
 
-function saveFieldFix(field, id) {
+/** Boş bırakılan alan eskisini korur: düzeltme, istemeden silmesin. */
+function saveFieldFix(id) {
     const word = data.words.find(item => item.id === id);
-    const draft = $('studyDetail').querySelector('.sentence-draft');
-    if (!word || !draft || !FIX_FIELDS[field]) return;
-    const value = draft.value.trim();
-    if (!value) { toast(FIX_FIELDS[field].empty, 'warn'); return; }
-    word[field] = value;
-    touch(word);
-    invalidateSearch(word);
-    save();
+    if (!word) return;
+    let changed = false;
+    $('studyDetail').querySelectorAll('textarea[data-fix-field]').forEach(draft => {
+        const value = draft.value.trim();
+        const field = draft.dataset.fixField;
+        if (value && value !== word[field]) { word[field] = value; changed = true; }
+    });
+    if (changed) {
+        touch(word);
+        invalidateSearch(word);
+        save();
+    }
     $('studyDetail').innerHTML = studyDetailHTML(word);
-    if (field === 'sentence' && !clozeParts(word)) toast('Kaydedildi ama kelime bu cümlede geçmiyor.', 'warn');
+    if (!changed) return;
+    if (!clozeParts(word)) toast('Kaydedildi ama kelime bu cümlede geçmiyor.', 'warn');
     else toast('Kart güncellendi.', 'good');
     renderWords();
     renderDashboard();
@@ -1492,7 +1538,7 @@ function showStudyCard(note = '') {
         $('studyKicker').textContent = 'Kart yok';
         $('studyMeta').textContent = 'Bu kuyrukta kart yok';
         $('progressBar').style.width = '0%';
-        $('studyPrompt').innerHTML = '<div class="stage-sub">Kütüphaneden kelime ekleyerek başla.</div>';
+        $('studyPrompt').innerHTML = '<div class="stage-sub">Kelimelerim sekmesinden kelime ekleyerek başla.</div>';
         $('studyCues').innerHTML = '';
         $('studyFeedback').textContent = note;
         $('studyFeedback').className = 'stage-feedback';
@@ -1565,7 +1611,7 @@ function revealCard() {
     $('studySpeak').classList.toggle('hidden', !speechSupported);
     $('studyPrimary').classList.add('hidden');
     $('studyRating').classList.remove('hidden');
-    $('studyFeedback').textContent = 'Nasıl hatırladığını seç — 1 tekrar · 2 zor · 3 kolay';
+    $('studyFeedback').textContent = 'Bu kelimeyi daha önce biliyor muydun?';
 }
 
 /** Bir kartın görülmesi. */
@@ -1707,7 +1753,8 @@ function advanceStudy() {
     showStudyCard();
 }
 
-const RATING_LABELS = { again: 'Tekrar', hard: 'Zor', easy: 'Kolay' };
+// Tekrar sisteminin dili (tekrar/zor/kolay) yeni gelen için anlamsızdı; hesap aynı, isim sade.
+const RATING_LABELS = { again: 'Bilmiyordum', hard: 'Biraz biliyordum', easy: 'Biliyordum' };
 
 function rateCurrentCard(rating) {
     const entry = studyCards[studyIndex];
@@ -1996,7 +2043,7 @@ function showChallengeCard() {
     } else {
         $('challengeHint').textContent = card
             ? 'Önce anlamını tahmin et, sonra cevabı aç'
-            : 'Kütüphaneden kelime ekleyerek başla';
+            : 'Kelimelerim sekmesinden kelime ekleyerek başla';
     }
     if (card) startChallengeTimer(); else stopChallengeTimer();
     updateChallengeHud();
@@ -2293,9 +2340,22 @@ function editWord(id) {
     $('wordSource').value = word.source || '';
     $('wordMnemonic').value = word.mnemonic || '';
     $('wordLevel').value = word.difficulty || '';
+    $('wordFormMore').open = ['definition', 'collocation', 'source', 'mnemonic', 'difficulty']
+        .some(field => String(word[field] || '').trim());
     $('wordForm').classList.remove('hidden');
     $('engWord').focus();
     $('saveWord').textContent = 'Değişiklikleri kaydet';
+}
+
+/** Boş kelime formu; açılış ekranından da gelinir, bu yüzden önce Kelimelerim'e geçer. */
+function openNewWord() {
+    if (!isTabActive('library')) switchTab('library');
+    editingId = null;
+    $('wordForm').reset();
+    $('wordFormMore').open = false;
+    $('wordForm').classList.remove('hidden');
+    $('engWord').focus();
+    $('saveWord').textContent = 'Kelimeyi kaydet';
 }
 
 function deleteWord(id) {
@@ -2587,7 +2647,7 @@ function restoreSnapshot(index) {
         saveNow();
         activeFolder = 'all';
         renderAll();
-        buildStudy();
+        if (studyStarted()) buildStudy(); else renderStudyStart();
         toast('Yedek geri yüklendi.', 'good');
     } catch (error) {
         toast('Yedek geri yüklenemedi.', 'warn');
@@ -2854,7 +2914,8 @@ async function syncNow(reason = '') {
                 renderAll();
                 // Turu baştan kurmak, çalışırken senkron gelince kullanıcıyı ilk karta
                 // atıyordu. Kartları yeni nesnelere bağla, yeri ve cevapları koru.
-                if (studyCards.length) rebindStudyCards(); else if (isTabActive('study')) buildStudy();
+                if (studyCards.length && studyStarted()) rebindStudyCards();
+                else if (isTabActive('study')) renderStudyStart();
             }
         }
         await pushRemote(activeUser, activeUserName || activeUser, activePinHash(), data);
@@ -2905,7 +2966,8 @@ function switchTab(name) {
         .forEach(view => $(`${view}View`).classList.toggle('hidden', view !== name));
 
     // Ağır işler yalnızca ilgili sekmeye girilince yapılır.
-    if (name === 'study') buildStudy();
+    // Çalış'a her girişte tur baştan kurulurdu; şimdi açılış ekranı, tur "Başla"yla kurulur.
+    if (name === 'study') showStudyStart();
     if (name === 'dictionary') renderDictionary();
     if (name === 'stats') renderStats();
     if (name === 'challenge') buildChallenge();
@@ -2949,13 +3011,7 @@ function bindEvents() {
         $('saveWord').textContent = 'Kelimeyi kaydet';
         renderAll();
     };
-    $('newWord').onclick = () => {
-        editingId = null;
-        $('wordForm').reset();
-        $('wordForm').classList.remove('hidden');
-        $('engWord').focus();
-        $('saveWord').textContent = 'Kelimeyi kaydet';
-    };
+    $('newWord').onclick = openNewWord;
     $('cancelEdit').onclick = () => { $('wordForm').classList.add('hidden'); editingId = null; };
 
     // Boşluk doldurma cümleye bağlı: kelime cümlede geçmiyorsa formda anında söyle.
@@ -3039,18 +3095,21 @@ function bindEvents() {
     $('levelFilter').onchange = () => { wordPage = 1; renderWords(); };
 
     /* --- Çalış --- */
-    $('studyFolder').onchange = buildStudy;
-    $('studyQueue').onchange = buildStudy;
-    $('studyMode').onchange = buildStudy;
+    $('studyFolder').onchange = renderStudyStart;
+    $('studyQueue').onchange = renderStudyStart;
+    $('studyMode').onchange = renderStudyStart;
+    $('startStudy').onclick = startStudy;
+    $('startAddWord').onclick = openNewWord;
+    $('studyExit').onclick = showStudyStart;
     $('studyPrimary').onclick = studyPrimary;
     $('studyHint').onclick = revealHint;
     $('studySkip').onclick = () => answerStudy(true);
     $('studySpeak').onclick = event => { event.stopPropagation(); speakText($('studySpeak').dataset.speakText); };
     $('studyDetail').addEventListener('click', event => {
-        const fix = event.target.closest('[data-fix-field]');
-        if (fix) return openFieldFix(fix.dataset.fixField, fix.dataset.fixId);
-        const saveIt = event.target.closest('[data-save-field]');
-        if (saveIt) return saveFieldFix(saveIt.dataset.saveField, saveIt.dataset.fixId);
+        const fix = event.target.closest('[data-fix-open]');
+        if (fix) return openFieldFix(fix.dataset.fixOpen);
+        const saveIt = event.target.closest('[data-save-fix]');
+        if (saveIt) return saveFieldFix(saveIt.dataset.saveFix);
         const cancel = event.target.closest('[data-cancel-fix]');
         if (cancel) {
             const entry = studyCards[studyIndex];
@@ -3123,6 +3182,13 @@ function bindEvents() {
         save();
     });
     document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => switchTab(tab.dataset.tab); });
+    // Test, oyunlar, sözlük ve istatistikler sekme değil, menüden açılır.
+    $('menuViews').addEventListener('click', event => {
+        const item = event.target.closest('[data-tab]');
+        if (!item) return;
+        $('mainMenu').open = false;
+        switchTab(item.dataset.tab);
+    });
 
     // Bekleyen yazma sekme kapanmadan diske insin.
     window.addEventListener('beforeunload', saveNow);
@@ -3159,6 +3225,10 @@ function bindKeyboard() {
         const key = event.key;
         const digit = Number(key);
 
+        if (activeTab === 'study' && !studyStarted()) {
+            if (key === 'Enter') { event.preventDefault(); startStudy(); }
+            return;
+        }
         if (activeTab === 'study') {
             if (key === ' ' || key === 'Enter') { event.preventDefault(); studyPrimary(); return; }
             if (digit >= 1 && digit <= 3 && revealed) {
@@ -3222,7 +3292,7 @@ function startSession() {
     $('userGate').classList.add('hidden');
     $('activeUser').textContent = activeUserName || activeUser;
     renderAll();
-    switchTab(activeTab === 'library' ? 'library' : activeTab);
+    switchTab(activeTab);
     flushSave();
 
     // Yeni cihazda önce ÇEKMEK şart: yazsaydık boş yerel veri bulut kopyasını silerdi.

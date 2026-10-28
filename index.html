@@ -19,27 +19,29 @@
     <header class="topbar">
         <div class="brand"><span class="brand-mark">L</span> <span>Lexi</span><span class="active-user" id="activeUser" title="Açık kullanıcı"></span></div>
 
+        <!-- İki sekme: çalışmak ve kelimeler. Gerisi ⋯ menüsünde, silinmedi. -->
         <nav class="tabs">
-            <button class="tab" data-tab="study">Çalış</button>
-            <button class="tab active" data-tab="library">Kütüphane</button>
-            <button class="tab" data-tab="test">Test</button>
-            <button class="tab" data-tab="challenge">Challenge</button>
-            <button class="tab" data-tab="dictionary">Sözlük</button>
-            <button class="tab" data-tab="stats">İstatistikler</button>
+            <button class="tab active" data-tab="study">Çalış</button>
+            <button class="tab" data-tab="library">Kelimelerim</button>
         </nav>
 
         <div class="status">
-            <div class="stat-pill" title="Üst üste üretim yaptığın gün"><i>🔥</i><strong id="streakStat">0</strong></div>
-            <div class="stat-pill xp" title="Bugün kazanılan puan"><i>✦</i><strong id="xpStat">+0</strong></div>
-            <div class="stat-pill goal" title="Günün hedefi"><span class="goal-fill" id="goalBar"></span><i>◎</i><strong id="goalText">0 / 10</strong></div>
-            <div class="stat-pill due" title="Vadesi gelen kart"><i>◷</i><strong id="dueStat">0</strong></div>
+            <div class="stat-pill" title="Üst üste çalıştığın gün"><i>🔥</i><strong id="streakStat">0</strong></div>
+            <div class="stat-pill goal" title="Bugün yazdığın kelime / günün hedefi"><span class="goal-fill" id="goalBar"></span><strong id="goalText">0/10 bugün</strong></div>
             <span class="sync-chip hidden" id="syncStatus"></span>
         </div>
 
         <div class="header-actions">
-            <details class="menu">
-                <summary title="Ayarlar">⋯</summary>
+            <details class="menu" id="mainMenu">
+                <summary title="Menü">⋯</summary>
                 <div class="menu-body">
+                    <div class="menu-group" id="menuViews">
+                        <span class="menu-label">Diğer</span>
+                        <button type="button" class="small-button" data-tab="stats">İstatistikler</button>
+                        <button type="button" class="small-button" data-tab="dictionary">Sözlük</button>
+                        <button type="button" class="small-button" data-tab="test">Test</button>
+                        <button type="button" class="small-button" data-tab="challenge">Oyunlar</button>
+                    </div>
                     <label>Tema
                         <div class="theme-picker" id="themePicker">
                             <button type="button" class="theme-option" data-theme="sakin" title="Sıcak kağıt, dingin, serif">Sakin</button>
@@ -69,7 +71,7 @@
     <main class="main">
 
         <!-- ============================================ Kütüphane -->
-        <section id="libraryView">
+        <section id="libraryView" class="hidden">
             <div class="library-layout">
                 <aside class="panel sidebar">
                     <div class="side-title">Klasörler <button class="icon-button" id="addFolder" title="Yeni klasör">+</button></div>
@@ -100,25 +102,29 @@
                     <form class="form hidden" id="wordForm">
                         <div class="form-grid">
                             <label>İngilizce kelime<input id="engWord" required placeholder="Örn. resilient"></label>
-                            <label>Türkçe anlamı <span class="label-note">ipucunun arkasında durur</span><input id="turkMeaning" required placeholder="Örn. dayanıklı"></label>
+                            <label>Türkçe anlamı<input id="turkMeaning" required placeholder="Örn. dayanıklı"></label>
                         </div>
-                        <label>İngilizce tanım <span class="label-note">anlamın birincil hâli — basit tut</span>
-                            <input id="wordDefinition" placeholder="Örn. able to recover quickly after something difficult"></label>
-                        <label>Örnek cümle <span class="label-note" id="sentenceNote">kelimeyi gördüğün gerçek cümle en iyisi</span>
-                            <textarea id="engSentence" placeholder="Kelimeyi doğal bir cümlede kullan..."></textarea></label>
-                        <div class="form-grid">
-                            <label>Kalıp kullanım / collocation<input id="wordCollocation" placeholder="Örn. make a decision"></label>
-                            <label>Nerede gördün?<input id="wordSource" placeholder="Örn. kitap s.42 · oyun · video"></label>
-                        </div>
-                        <div class="form-grid">
-                            <label>Seviye<select id="wordLevel">
-                                <option value="">Seviye seçilmedi</option>
-                                <option value="A1">A1</option><option value="A2">A2</option>
-                                <option value="B1">B1</option><option value="B2">B2</option>
-                                <option value="C1">C1</option><option value="C2">C2</option>
-                            </select></label>
-                            <label>Hatırlama notu (mnemonic)<input id="wordMnemonic" placeholder="Kendi hafıza ipucun..."></label>
-                        </div>
+                        <label>Gördüğün cümle <span class="label-note" id="sentenceNote">kelimeyi gördüğün gerçek cümle en iyisi</span>
+                            <textarea id="engSentence" placeholder="Kelimeyi gördüğün cümleyi yaz..."></textarea></label>
+                        <!-- Üç alan yeter; gerisi isteyene. Düzenlerken dolu alan varsa açık gelir. -->
+                        <details class="form-more" id="wordFormMore">
+                            <summary>Daha fazla</summary>
+                            <label>İngilizce tanım <span class="label-note">basit tut — anlamı en keskin anlatan alan</span>
+                                <input id="wordDefinition" placeholder="Örn. able to recover quickly after something difficult"></label>
+                            <div class="form-grid">
+                                <label>Kalıp <span class="label-note">sık birlikte geçtiği sözcükler</span><input id="wordCollocation" placeholder="Örn. make a decision"></label>
+                                <label>Nerede gördün?<input id="wordSource" placeholder="Örn. kitap s.42 · oyun · video"></label>
+                            </div>
+                            <div class="form-grid">
+                                <label>Seviye<select id="wordLevel">
+                                    <option value="">Seviye seçilmedi</option>
+                                    <option value="A1">A1</option><option value="A2">A2</option>
+                                    <option value="B1">B1</option><option value="B2">B2</option>
+                                    <option value="C1">C1</option><option value="C2">C2</option>
+                                </select></label>
+                                <label>Hatırlama notu<input id="wordMnemonic" placeholder="Kendi hafıza hilen..."></label>
+                            </div>
+                        </details>
                         <div class="dialog-actions" style="justify-content:flex-start">
                             <button class="action" type="submit" id="saveWord">Kelimeyi kaydet</button>
                             <button type="button" class="small-button" id="cancelEdit">Vazgeç</button>
@@ -132,28 +138,41 @@
         </section>
 
         <!-- ============================================ Çalış -->
-        <section id="studyView" class="hidden">
-            <div class="study-panel">
+        <section id="studyView">
+            <!-- Açılış: tek cümle, tek düğme. Seçenekler katlı, isteyen açar. -->
+            <div class="study-start" id="studyStart">
+                <div class="start-title" id="startTitle">Hazır mısın?</div>
+                <div class="start-sub" id="startSub"></div>
+                <button class="start-button" id="startStudy">Başla</button>
+                <button type="button" class="start-link" id="startAddWord">+ Kelime ekle</button>
+                <details class="study-options" id="studyOptions">
+                    <summary>Çalışma ayarları</summary>
+                    <div class="study-controls">
+                        <label>Nasıl çalışayım?
+                            <select id="studyMode">
+                                <option value="flow">Günlük akış (önerilen)</option>
+                                <option value="cloze">Boşluk doldurma</option>
+                                <option value="produce">Anlamdan kelimeye</option>
+                                <option value="listen">Dinle ve yaz</option>
+                                <option value="intro">Kart (tanışma)</option>
+                            </select></label>
+                        <label>Hangi kelimeler?
+                            <select id="studyQueue">
+                                <option value="due">Zamanı gelenler</option>
+                                <option value="new">Hiç çalışılmamışlar</option>
+                                <option value="hard">Zorlandıklarım</option>
+                                <option value="all">Hepsi</option>
+                            </select></label>
+                        <label>Klasör<select id="studyFolder"></select></label>
+                    </div>
+                </details>
+            </div>
+
+            <div class="study-panel hidden" id="studyPanel">
                 <div class="study-bar">
                     <div class="study-meta-line">
-                        <span id="studyMeta">Klasör seç</span>
-                        <span class="queue-badge" id="studyQueueBadge">0 vadesi geldi</span>
-                    </div>
-                    <div class="study-controls">
-                        <select id="studyMode" aria-label="Çalışma modu">
-                            <option value="flow">Günlük akış</option>
-                            <option value="cloze">Boşluk doldurma</option>
-                            <option value="produce">Anlamdan kelimeye</option>
-                            <option value="listen">Dinle ve yaz</option>
-                            <option value="intro">Kart (tanışma)</option>
-                        </select>
-                        <select id="studyQueue" aria-label="Çalışma kuyruğu">
-                            <option value="due">Vadesi gelenler</option>
-                            <option value="new">Hiç çalışılmamışlar</option>
-                            <option value="hard">Zorlandıklarım</option>
-                            <option value="all">Tüm kartlar</option>
-                        </select>
-                        <select id="studyFolder" aria-label="Klasör"></select>
+                        <button type="button" class="start-link" id="studyExit" title="Turu bırak">← Çık</button>
+                        <span id="studyMeta"></span>
                     </div>
                 </div>
 
@@ -170,9 +189,9 @@
                 </div>
 
                 <div class="study-rating hidden" id="studyRating">
-                    <button data-rating="again">Tekrar</button>
-                    <button data-rating="hard">Zor</button>
-                    <button data-rating="easy">Kolay</button>
+                    <button data-rating="again">Bilmiyordum</button>
+                    <button data-rating="hard">Biraz biliyordum</button>
+                    <button data-rating="easy">Biliyordum</button>
                 </div>
 
                 <div class="study-actions">
@@ -191,8 +210,6 @@
                     <kbd>S</kbd><span>seslendir</span>
                 </div>
             </div>
-
-            <section class="task-panel" id="taskList"></section>
         </section>
 
         <!-- ============================================ Test -->
